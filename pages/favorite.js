@@ -5,14 +5,46 @@ import styles from '../styles/Wishlist.module.scss'
 import Image from 'next/image'
 import { BsCheck, BsFillHeartFill } from 'react-icons/bs';
 import Button from "../components/Button";
+import { useDispatch, useSelector } from 'react-redux'
+import { getFavorite } from "../redux/actions/favorite"
+import { useEffect, useState } from "react"
+import { addToCart } from '../redux/actions/cart'
 
 const Favorite = () => {
 
-  const productsFavorite = [
-    { image: '/images/img-product.png', name: 'Coaster 506222-CO Loveseat', status: 'In Stock', price: 'Rp. 400.000' },
-    { image: '/images/img-product.png', name: 'Coaster 506222-CO Loveseat', status: 'In Stock', price: 'Rp. 400.000' },
-    { image: '/images/img-product.png', name: 'Coaster 506222-CO Loveseat', status: 'In Stock', price: 'Rp. 400.000' },
-  ]
+  // const productsFavorite = [
+  //   { image: '/images/img-product.png', name: 'Coaster 506222-CO Loveseat', status: 'In Stock', price: 'Rp. 400.000' },
+  //   { image: '/images/img-product.png', name: 'Coaster 506222-CO Loveseat', status: 'In Stock', price: 'Rp. 400.000' },
+  //   { image: '/images/img-product.png', name: 'Coaster 506222-CO Loveseat', status: 'In Stock', price: 'Rp. 400.000' },
+  // ]
+
+  const dispatch = useDispatch()
+
+  const { favorite } = useSelector(state => state)
+  const [userToken, setUserToken] = useState()
+  const [showModalAdd, setShowModalAdd] = useState(false)
+
+  useEffect(() => {
+    const token = window.localStorage.getItem('token')
+    dispatch(getFavorite(token))
+  }, [])
+
+  // const addCart = async (e) => {
+  //   e.preventDefault()
+  //   const data = {
+  //     id_product: favorite.data.id_product,
+  //     qty: 'Unset',
+  //     recipient_name: 'Unset',
+  //     address: 'Unset',
+  //   }
+  //   console.log(data)
+  //   await addToCart(dispatch, userToken, data)
+  //   await setShowModalAdd(true)
+  //   setTimeout(() => {
+  //     setShowModalAdd(false)
+  //   }
+  //     , 5000)
+  // }
 
   return (
     <>
@@ -40,22 +72,22 @@ const Favorite = () => {
               <span className="ms-0 ms-lg-5">Price</span>
             </Col>
           </Row>
-          {productsFavorite.map(item => {
+          {favorite.data?.map((datas, idx) => {
             return (
               <>
                 <Row className='mb-5'>
                   <Col xs={12} sm={6} lg={4} className='d-flex flex-row align-items-center'>
-                    <Image className={`${styles.image}`} src={item.image} width={170} height={172} alt='wishlist' />
-                    <span className="ps-4">{item.name}</span>
+                    <Image className={`${styles.image}`} src={datas.product?.product_images[0]?.image ? datas.product?.product_images[0]?.image : '/images/noimage.png'} width={170} height={172} alt='wishlist' />
+                    <span className="ps-4">{datas.product.name}</span>
                   </Col>
                   <Col xs={12} sm={6} lg={4} className='my-auto'>
                     <span className="ms-0 ms-lg-5">
-                      <span ><BsCheck /></span> {item.status}
+                      <span ><BsCheck /></span> {datas.product.stock} in Stock
                     </span>
                   </Col>
                   <Col xs={12} sm={12} lg={4} className='my-auto d-flex align-items-center'>
-                    <span className="ms-0 ms-lg-5">{item.price}</span>
-                    <Button className={`${styles.button} px-5 py-2 ms-5`} color='danger'>Add to cart</Button>
+                    <span className="ms-0 ms-lg-5">Rp.{datas.product.price.toLocaleString('id-ID')}</span>
+                    <Button className={`${styles.button} px-4 py-2 ms-5`} color='danger'>Add to cart</Button>
                   </Col>
                 </Row>
               </>

@@ -35,10 +35,12 @@ const MyProduct = () => {
   },[])
 
   const deleteHandler = async ( id) => {
-    const token = window.localStorage.getItem('token')
-    await dispatch(deleteProductSeller(token, id))    
-    window.scrollTo(0, 0)
+    console.log(id)
+    
+    setModalShow(true) 
+    await deleteProductSeller(dispatch, id)    
     await dispatch(getProductSeller(auth.userData?.id))
+    window.scrollTo(0, 0)
   }
 
   return (
@@ -77,7 +79,7 @@ const MyProduct = () => {
             <Row key={datas?.id} className='my-5'>
               <Col xs={12} sm={6} lg={4} className='d-flex flex-row align-items-center'>
                 <Image src={datas.product_images[0]?.image ? datas.product_images[0]?.image : empty} alt='product' width={100} height={100} />
-                <span className="ps-4">{datas?.name}</span>
+                <span className="ps-4">{datas?.id}</span>
               </Col>
               <Col xs={12} sm={6} lg={4} className='my-auto'>
                 <div className="my-3 my-lg-0 ms-0 ms-lg-5">
@@ -86,9 +88,8 @@ const MyProduct = () => {
               </Col>
               <Col xs={12} sm={12} lg={4} className='my-auto d-flex align-items-center'>
                 <div className="fw-bold ms-0 ms-lg-5"><NumberFormat value={datas?.price} displayType={'text'} thousandSeparator={'.'} decimalSeparator={','} prefix={'Rp. '} ></NumberFormat></div>
-                <Button onClick={() => setModalShow(true)} className={`${styles.button} px-5 py-2 ms-5`} color='danger'>Delete</Button>
-                <Modal show={modalShow} onClick={()=>deleteHandler(datas.id)} onHide={() => setModalShow(false)} />
-                {}
+                <Button onClick={async()=>{deleteHandler(datas.id) }} className={`${styles.button} px-5 py-2 ms-5`} color='danger'>Delete</Button>
+                <Modal show={modalShow} onHide={() => setModalShow(false)} />
               </Col>
             </Row>
           )

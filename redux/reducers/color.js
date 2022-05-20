@@ -7,6 +7,9 @@ const color = (state = dataColor, action) => {
         case 'GET_COLOR': {
             const data = action.payload
             state.data = data
+            if(!Array.isArray(data)){
+                state.data = [data]
+            }
             return {...state }
         }
         default: {

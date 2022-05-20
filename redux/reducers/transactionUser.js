@@ -1,18 +1,15 @@
-const dataProduct = {
+const dataTransactionUser = {
     data: []
 }
 
-const product = (state = dataProduct, action) => {
+const transactionUser = (state = dataTransactionUser, action) => {
     switch (action.type) {        
-        case 'GET_PRODUCT': {
+        case 'GET_TRANSACTION_USER': {
             const data = action.payload
             state.data = data
-            // if(!Array.isArray(data)){
-            //     state.data = [data]
-            // }
             return {...state }
         }
-        case 'DELETE_PRODUCT': {
+        case 'DELETE_TRANSACTION_USER': {
             const data = action.payload
             state.data = data
             return {...state }
@@ -23,4 +20,4 @@ const product = (state = dataProduct, action) => {
     }
 }
 
-export default product
+export default transactionUser

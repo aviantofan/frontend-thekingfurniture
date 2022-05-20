@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import { useState,useEffect } from "react"
+import { useRouter } from 'next/router'
 import { Row, Col, Container, Form } from "react-bootstrap"
 import Image from "next/image"
 import Button from "../components/Button"
@@ -9,9 +10,11 @@ import carts from "../styles/cart.module.scss"
 import { useDispatch } from 'react-redux'
 import { increment, decrement } from '../redux/actions/buttons'
 import { useSelector } from 'react-redux'
-import { getCart } from '../redux/actions/cart'
+import { deleteCart, getCart } from '../redux/actions/cart'
+import Layout from '../components/Layout'
 
 const Cart = ()=>{
+  const router = useRouter()
   const buttons = useSelector(state=>state.buttons)
   const { cart, pages } = useSelector(state=>state)
   const {totalPrice, setTotalPrice} = useState({value: 0})
@@ -35,14 +38,25 @@ const onIncrement = (e)=>{
     e.preventDefault()
     dispatch(decrement())
   }
-
+  const toCheckout = () => {
+    router.push('/cart-checkout')
+  }
+  const deleteAllInCart = async() => {
+    cart.data?.map((datas)=>{
+      deleteCart(dispatch, datas.id)
+    })
+    window.scrollTo(0,0)
+    await getCart(dispatch)
+  }
   return(
       <>
+        <Layout>
         <Head>
         <title>The King | Product List</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
       <div className={`${carts.containers} `}>
+      {cart.data?.length>0 && <div>
       <div className={`${carts.profiles} `}>
                     <div className="d-flex flex-column justify-content-center">
                         <div style={{fontSize:"16px", fontFamily:"Rubik"}} className="text-justify p-auto px-5 mx-5 mt-5 nav-text">
@@ -67,12 +81,12 @@ const onIncrement = (e)=>{
                   }
               </Row>
                 {!pages.isLoading && <div>
-                  {cart.data?.map((item)=>{
+                  {cart.data && cart.data?.map((item)=>{
                     return(
                       <Row key={item.name}>
                         <Col lg={6}>
                           <div className='d-flex flex-row align-items-center'>
-                            <span className="py-5 me-3"><Button className={carts.button}><FaTrashAlt className="fs-5"/></Button></span>
+                            <span className="py-5 me-3" onClick={async()=>{deleteCart(dispatch,item.id); window.scrollTo(0,0); await getCart(dispatch);}}><Button className={carts.button}><FaTrashAlt className="fs-5"/></Button></span>
                             <Image src={item.product.product_images[0]?.image ? item.product.product_images[0]?.image : '/images/chair.png'} width={69} height={83} alt ="product"/>
                             <span className="ms-5">{item.product.name}</span>
                           </div>
@@ -103,7 +117,7 @@ const onIncrement = (e)=>{
                   <Button className={`${carts.buttonUpdate} fw-bold`}>Apply Cupon</Button>
                 </div>
                 <div className="text-end">
-                  <Button classStyle={`${carts.buttonDelete}`}>Clear Cart</Button>
+                  <Button onClick={deleteAllInCart} classStyle={`${carts.buttonDelete}`}>Clear Cart</Button>
                   <Button classStyle={`${carts.buttonUpdate} fw-bold`}>Update Cart</Button>
                 </div>
               </div>
@@ -133,13 +147,37 @@ const onIncrement = (e)=>{
                     </Row>
                 </div>
                 <div className="ms-md-4 mb-5 d-grid gap-2">
-                  <Button styleCart={`${carts.buttonCo}`}>Procced To Check Out</Button>
+                  <Button onClick={toCheckout} styleCart={`${carts.buttonCo}` }>Procced To Check Out</Button>
                 </div>
             </Col>
           </Row>
         </Form>
       </Container>
+      </div>}
+      {cart.data?.length<1 && <div>
+        <div className={`${carts.profiles} `}>
+            <div className="d-flex flex-column justify-content-center">
+                <div style={{fontSize:"16px", fontFamily:"Rubik"}} className="text-justify p-auto px-5 mx-5 mt-5 nav-text">
+                    <span >Cart {""}</span><span className="text-yellow-800"> {">"} </span>
+                </div>
+                <div className={`${carts.content} text-center mb-2 mt-3`}>Your Cart</div>
+                <div className={`${carts.contents} text-center mb-5`}>Buy everything in your cart now!</div>
+            </div>
+        </div>
+        <Container>
+        <div className="text-center py-5">
+          <div  className="pt-4">
+            <Image src="/images/shopping-cart.png" width={200} height={200} alt="people"/>
+          </div>
+          <div className="fs-1 mt-3">Your Cart is Empty</div>
+          <div className="w-50 ms-auto me-auto mt-3 pb-5">
+            <p className={`${carts.text} text-center`}>Donec nunc nunc, gravida vitae diam vel, varius interdum erat. Quisque a nunc vel diam auctor commodo. urabitur blandit ultri</p>
+          </div>
+        </div>
+        </Container>
+      </div>}
       </div>
+      </Layout>
       </>
   )
 }

@@ -98,7 +98,7 @@ const LoginRegister = () => {
                       </div>
                     </Col>
                     <Col xl={6}>
-                      <Link href="/forgot">
+                      <Link href="/Forgot">
                         <a className='text-danger'>Forgot your password</a>
                       </Link>
                     </Col>
@@ -128,7 +128,7 @@ const LoginRegister = () => {
                     <div className='d-flex'>
                       <div className='me-5'>
                         <label className='position-relative align-items-center d-flex'>
-                          <input type="radio" className='position-absolute' value='1' name="id_role" />
+                          <input type="radio" className='position-absolute' value='3' name="id_role" />
                           <div className="d-inline-block"></div>
                           <div className="text d-inline-block ms-4">I`m Customer</div>
                         </label>

@@ -7,6 +7,17 @@ const category = (state = dataCategory, action) => {
         case 'GET_CATEGORY': {
             const data = action.payload
             state.data = data
+            if(!Array.isArray(data)){
+                state.data = [data]
+            }
+            return {...state }
+        }
+        case 'GET_CATEGORY_TOTAL': {
+            const data = action.payload
+            state.data = data
+            if(!Array.isArray(data)){
+                state.data = [data]
+            }
             return {...state }
         }
         default: {

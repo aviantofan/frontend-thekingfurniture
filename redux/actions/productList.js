@@ -1,11 +1,11 @@
 import http from '../../helpers/http'
 import qs from 'qs'
 
-export const getProduct = async (dispatch) => {
+export const getProduct = async (dispatch, page=1) => {
     try {
         dispatch({type: 'TOGGLE_LOADING'})
-        const {data} = await http().get('/product')
-        dispatch({type: 'GET_PRODUCT', payload: data.result})
+        const {data} = await http().get(`/product?page=${page}`)
+        dispatch({type: 'GET_PRODUCT', payload: data})
         dispatch({type: 'TOGGLE_LOADING'})
     } catch (e){
         console.log(e)

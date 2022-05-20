@@ -2,6 +2,7 @@ const initialState = {
   userData: {},
   token: null,
   isErr: false,
+  errorMsg: '',
   errMsg: '',
   successMsg: null,
   updateProfile: false

@@ -13,6 +13,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { getCategory } from '../redux/actions/category'
 import { HiOutlinePencil } from 'react-icons/hi'
 import Modals from "../components/ModalAdd"
+import http from '../helpers/http'
 
 const SellingProduct = () => {
   const {productSeller, auth, category} = useSelector(state=>state)
@@ -20,44 +21,87 @@ const SellingProduct = () => {
   const hiddenFileInput = useRef(null)
   const [modalShow, setModalShow] = React.useState(false);
   const [data, setData] = useState({})
+  const [img, setImg] = useState();
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState(false)
 
   useEffect(() => {
     dispatch(getCategory);
   }, [])
 
-  const fileInputHandler = (e) => {
-    const reader = new FileReader();
-    const image = e.target.files[0];
-
-    const productImage = document.querySelector('#product-image');
-    reader.readAsDataURL(image);
-
-    reader.onload = (e) => {
-      productImage.src = e.target.result;
-      productImage.className += ' rounded-circle'
-    };
-    setData({
-      image: e.target.files[0]
-    });
-  };
+  // const [image, setImage] = useState(null);
+  // const [createObjectURL, setCreateObjectURL] = useState(null);
   
   const uploadFile = (e) => {
     e.preventDefault()
     hiddenFileInput.current.click()
   }
+
+  const imageChange = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      setImg(URL.createObjectURL(event.target.files[0]));
+    }
+    setData({image:event.target.files[0]})
+  }
   
 
-  const addProductHandler = (e) => {
+  const addProductHandler = async (e) => {
     e.preventDefault()
-    const name  = e.target.elements["name"].value;
-    const description  = e.target.elements["description"].value;
-    const stock  = e.target.elements["stock"].value;
-    const price  = e.target.elements["price"].value;
-    const condition  = e.target.elements["condition"].value;
+    setLoading(true)
+    setErr(false)
+    const name  = document.getElementById("name").value;
+    const description  = document.getElementById("description").value;
+    const stock  = document.getElementById("stock").value;
+    const price  = document.getElementById("price").value;
+    const condition  = document.getElementById("condition").value;
     const id_seller = auth.userData.id;
     const id_category = document.querySelector('.category .form-check-input:checked').value;
-    const data = {name, description, stock, price, condition, id_seller, id_category}
-    dispatch(createProductSeller(data))
+    // const image = data.image
+    const file = document.getElementById('fileImg').files[0];
+
+    const param = new URLSearchParams();
+    param.append('name', name)
+    param.append('description', description)
+    param.append('price', price)
+    param.append('stock', stock)
+    param.append('condition', condition)
+    param.append('id_seller', id_seller)
+    param.append('id_category', id_category)
+
+    const token = window.localStorage.getItem('token')
+
+    if (file) {
+      await http(token).post('/product', param)
+      .then(async (res) => {
+        if (res.status < 400) {
+          console.log('res', res)
+          const files = new FormData();
+          files.append('image', file)
+          files.append('id_product', res.data.result.id)
+          await http(token).post('/product-image', files)
+          .then(res => {
+            console.log('image', res.data.result)
+          })
+          .catch(err => {
+            // console.log('image', err.response.data.message)
+          })
+          // setMessage(res.data.result.message)
+          // setSuccess(true)
+          setLoading(false);
+          route.push('/my-product')
+        }
+      }).catch(err => {
+        setLoading(false);
+        setErr(true);
+        // console.log(err.response.data.message)
+        // setMessage(err.response.data.message)
+      })
+    } else {
+      setErr(true);
+      // setMessage('Please add your image products')
+    }
+    
+    window.scrollTo(0, 0)
   }
   return (
     <Layout>
@@ -76,12 +120,12 @@ const SellingProduct = () => {
                 <NavbarProfile />    
             </div> 
         <Form  onSubmit={addProductHandler}> 
-        {auth.errMsg &&
+        {productSeller.errorMsg &&
           <div className="alert alert-warning fade show" role="alert" aria-label="Close">
-            <strong>Error</strong>
-        </div>
+          <strong>{productSeller.errorMsg}</strong>
+          </div>
         }
-        {productSeller.data  &&
+        {!productSeller.errorMsg  &&
           <Modals show={modalShow} onHide={() => setModalShow(false)} />
         }
         <Container className='mb-5'>
@@ -91,6 +135,7 @@ const SellingProduct = () => {
             <h4>Inventory</h4>
             <Input
               type="text"
+              id="name"
               name="name"
               aria-describedby="name"
               className='me-5 py-3 mt-5'
@@ -144,6 +189,7 @@ const SellingProduct = () => {
                   label="New Product"
                   name="condition"
                   value='New'
+                  id="condition"
                 />
               </Col>
               <Col>
@@ -159,7 +205,7 @@ const SellingProduct = () => {
               <Col xs={12} md={4}>
                 <div height={30} className="my-3">
                   <Image
-                    src={seller}
+                    src={img || seller}
                     width="500px"
                     height="500px"
                     className="img-thumbnail"
@@ -167,7 +213,7 @@ const SellingProduct = () => {
                 </div>
               </Col>
               <Col xs={12} md={4}>
-                <div height={30} className="my-3">
+                <div height={30} className="my-3 position-relative">                
                   <Image
                     id='product-image'
                     name='product-image'
@@ -176,21 +222,22 @@ const SellingProduct = () => {
                     height="500px"
                     className="img-thumbnail"
                     alt="..." />
-                    
-                </div>
-                <Button block variant='pallet-3 my-1 radius save-1' onClick={(e) =>uploadFile(e)}> Choose from Gallery </Button>
-                    <input type="file"
+                    <Button block variant='pallet-2 radius mt-1 d-flex flex-row justify-content-center' onClick={(e) => uploadFile(e)}> Choose from Gallery </Button>
+                  <input type="file"
+                  id='fileImg'
                       ref={hiddenFileInput}
-                      className='d-none'
-                      name='image'
+                      className='d-none'                      
                       accept='image'
-                      onChange={(e) => fileInputHandler(e)}
-                    />
+                      onChange={imageChange}
+                  />
+                </div>
+                {/* <Button block variant='pallet-3 my-1 radius save-1' onClick={uploadToServer}> Choose from Gallery </Button>                 */}
               </Col>
             </Row>
             <Button onClick={()=>setModalShow(true)} type='submit' className='mt-4 px-4' variant="color2" size="lg" active>
               Sell Product
             </Button>{' '}
+            <Modals show={modalShow} onHide={() => setModalShow(false)} />
           </Col>
           <Col xs={12} md={3}>
 

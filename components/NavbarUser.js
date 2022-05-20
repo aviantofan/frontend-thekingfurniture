@@ -5,7 +5,7 @@ import { Container } from 'react-bootstrap'
 import Link from 'next/link'
 import { FaChevronDown } from 'react-icons/fa'
 
-const NavbarProfile = () => {    
+const NavbarUser = () => {    
   const [active, setActive] = useState('/profile')
   const router = useRouter()
   useEffect(() => {
@@ -13,9 +13,7 @@ const NavbarProfile = () => {
   }, [router.pathname])
   const file = [
     { link: '/profile', name: 'Profile' },
-    { link: '/my-product', name: 'My Product' },
-    { link: '/selling-product', name: 'Selling Product' },
-    { link: '/my-order', name: 'My Order' },
+    { link: '/history', name: 'My History' },
   ]
   return (
     <>
@@ -62,4 +60,4 @@ const NavbarProfile = () => {
     </>
   )
 }
-export default NavbarProfile
+export default NavbarUser

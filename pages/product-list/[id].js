@@ -13,15 +13,18 @@ import { getProductDetail } from '../../redux/actions/productDetail'
 import { increment, decrement } from '../../redux/actions/counter'
 import { addToCart } from '../../redux/actions/cart'
 import { checkFavorite, addToFavorite, removeFavorite } from '../../redux/actions/favorite'
+import { checkWishlist, addToWishlist, removeWishlist } from '../../redux/actions/wishlist'
 import { Carousel } from "react-responsive-carousel";
 import 'react-responsive-carousel/lib/styles/carousel.min.css'
 
 const ProductDetail = () => {
 
   const { productDetail } = useSelector(state => state)
-  const { pages, favorite } = useSelector(state => state)
+  const { favorite, wishlist } = useSelector(state => state)
   const [liked, setLiked] = useState(false)
+  const [wished, setWished] = useState(false)
   const [userToken, setUserToken] = useState()
+  const [showModalAdd, setShowModalAdd] = useState(false)
   const router = useRouter()
 
   // const product = [
@@ -60,45 +63,71 @@ const ProductDetail = () => {
     const token = window.localStorage.getItem('token')
     setUserToken(token)
     getProductDetail(dispatch, router.query.id)
-    checkFavorite(dispatch, router.query.id)
+
   }, [router.query.id])
+
+  useEffect(() => {
+    checkFavorite(dispatch, router.query.id)
+    if (favorite.data?.id) {
+      setLiked(true)
+    }
+    if (wishlist.data?.id) {
+      setWished(true)
+    }
+  }, [])
 
 
   const counter = useSelector(state => state.counter)
 
   const onInc = () => {
-    dispatch(increment())
+    if (counter.num < productDetail.data.stock) {
+      dispatch(increment())
+    }
   }
   const onDec = () => {
-    dispatch(decrement())
+    if (counter.num > 1) {
+      dispatch(decrement())
+    }
   }
 
   const cart = (id) => {
     router.push(`cart/${[id]}`)
   }
-  const addCart = (e) => {
+  const addCart = async (e) => {
     e.preventDefault()
-        const data = {
-        id_product: router.query.id,
-        qty: counter.num > 1 ? counter.num : 1,
-        recipient_name: 'Unset',
-        address: 'Unset',
+    const data = {
+      id_product: router.query.id,
+      qty: counter.num > 1 ? counter.num : 1,
+      recipient_name: 'Unset',
+      address: 'Unset',
     }
     console.log(data)
-    addToCart(dispatch, userToken, data)
+    await addToCart(dispatch, userToken, data)
+    await setShowModalAdd(true)
+    setTimeout(() => {
+      setShowModalAdd(false)
+    }
+      , 5000)
   }
 
-  const likeProduct = async() => {
+  const likeProduct = async () => {
     setLiked(!liked)
-      if (!favorite.data?.id) {
-        const data = {id_product: router.query.id}
-        addToFavorite(dispatch, data)
-      }else{
-          removeFavorite(dispatch, favorite.data.id)
-          await checkFavorite(dispatch, router.query.id)
-      }
-      
+    if (!favorite.data?.id) {
+      const data = { id_product: router.query.id }
+      addToFavorite(dispatch, data)
+    } else {
+      removeFavorite(dispatch, favorite.data.id)
+      await checkFavorite(dispatch, router.query.id)
+    }
+
   }
+
+  const wishlistProduct = async () => {
+    setWished(!wished)
+    const data = { id_product: router.query.id }
+    addToWishlist(dispatch, data)
+  }
+
   return (
     <>
       <style jsx>
@@ -193,6 +222,8 @@ const ProductDetail = () => {
                 <p className=''>{productDetail.data?.description}</p>
               </Col>
             </Row>
+            {showModalAdd &&
+              <div className='text-primary bg-white p-5'>Added to cart</div>}
             <Row>
               <Col xl={12} className='text-center mt-5'>
                 <div className='d-flex'>
@@ -205,10 +236,10 @@ const ProductDetail = () => {
                     <button className={`${styles.button} py-3 px-5 ms-3 me-3 text-white`} onClick={addCart}>Add to cart</button>
                   </div>
                   <div className='d-inline-block'>
-                    <button onClick={likeProduct} className={`${styles.buttonLike} py-3 px-3 ${favorite.data?.id || liked? 'text-danger': 'text-white'}`}><FaHeart className='fs-5' /></button>
+                    <button onClick={likeProduct} className={`${styles.buttonLike} py-3 px-3 ${liked ? 'text-danger' : 'text-white'}`}><FaHeart className='fs-5' /></button>
                   </div>
                   <div className='d-inline-block'>
-                    <button className={`${styles.buttonWish} py-3 ms-3 text-white`}>Add to wishlist</button>
+                    <button onClick={wishlistProduct} className={`${styles.buttonWish} py-3 ms-3 text-white `} ><p className={`p-0 m-0 ${wished ? 'text-danger' : 'text-white'}`}>Add to wishlist</p></button>
                   </div>
                 </div>
               </Col>

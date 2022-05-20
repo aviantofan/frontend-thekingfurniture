@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Button from "../components/Button"
 import { useEffect, useState } from "react";
 import { logout } from "../redux/actions/auth";
+import qs from 'qs'
 
 const Navbar = () => {
   const route = useRouter();
@@ -33,6 +34,15 @@ const Navbar = () => {
   const logoutHandler = () => {
     dispatch(logout)
     setUserToken(null)
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+
+    const searchData = {}
+    searchData.search = e.target.elements['search'].value
+    const queryString = qs.stringify(searchData)
+    route.push(`/product-list/search?${queryString}`)
   }
 
   return (
@@ -97,7 +107,7 @@ const Navbar = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href='/cart/checkout'>
+                  <Link href='/cart-checkout'>
                   <a className="">Check Out</a>
                   </Link>
                 </li>
@@ -122,12 +132,12 @@ const Navbar = () => {
             </li>
           </ul>
           <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
-            <li  onClick={searchBtn} className="nav-item d-flex flex-row align-items-center">
-              <button className="btn" type="submit">
+            <li className="nav-item d-flex flex-row align-items-center">
+              <button onClick={searchBtn} className="btn" type="submit">
                 <BiSearchAlt2 className="fs-2 text-white"/>
               </button>
-              <form id="formSearch" className={styles.formSearch}>
-                <input type='text' className="form-control bg-white text-dark text-center" />
+              <form id="formSearch" className={styles.formSearch} onSubmit={handleSearch} >
+                <input type='text' name="search" className="form-control bg-white text-dark text-center" />
               </form>
             </li>
             <li className="nav-item">

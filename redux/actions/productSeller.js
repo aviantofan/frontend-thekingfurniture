@@ -13,9 +13,10 @@ export const getProductSeller = (seller_id) => {
     }
 }
 
-export const deleteProductSeller = (token, id) => {
-    return async (dispatch) => {
+export const deleteProductSeller = async (dispatch, id) => {
+    // return async (dispatch) => {
         try {
+            const token = window.localStorage.getItem('token')
             dispatch({type: 'TOGGLE_LOADING'})
             const {data} = await http(token).patch(`/product/delete/${id}`)
             dispatch({type: 'DELETE_PRODUCT_SELLER', payload: data.result})
@@ -23,7 +24,7 @@ export const deleteProductSeller = (token, id) => {
         } catch (e){
             console.log(e)
         }
-    }
+    // }
 }
 
 export const createProductSeller = (data) => {

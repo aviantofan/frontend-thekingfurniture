@@ -9,10 +9,14 @@ import Layout from "../components/Layout"
 import Head from "next/head"
 import Input from "../components/Input"
 import { useDispatch, useSelector } from "react-redux"
-import { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { getProfile, updateProfile } from "../redux/actions/auth"
 import Button from "../components/Button"
 import carts from "../styles/cart.module.scss"
+import Link from "next/link"
+import { logout } from "../redux/actions/auth"
+import Modals from "../components/ModalUpdate"
+import NavbarUser from "../components/NavbarUser"
 
 const ProfileSeller = () => {
     const dispatch = useDispatch()
@@ -20,11 +24,26 @@ const ProfileSeller = () => {
     const role = auth.userData.role
     const genders = (String(auth.userData.gender))
     const hiddenFileInput = useRef(null)
+    const [userToken, setUserToken] = useState()
+    const [modalShow, setModalShow] = React.useState(false);
+    const [showImage, setShowImage] = useState(people)
+    const [datas, setDatas] = useState({})
+
+    useEffect(()=>{
+        const token = window.localStorage.getItem('token')
+        setUserToken(token)
+      },[auth.token])
+
     useEffect(
         () => {
         dispatch(getProfile)
-        }, []
+        }, [dispatch]
     )
+    useEffect(()=>{
+        if(auth.userData.picture) {
+            setShowImage(auth.userData.picture)
+        }
+    }, [auth.userData.picture])
     const uploadFile = (e) => {
         e.preventDefault()
         hiddenFileInput.current.click()
@@ -35,24 +54,39 @@ const ProfileSeller = () => {
         const profileImage = document.querySelector('#profile-image');
         reader.readAsDataURL(picture);
         reader.onload = (e) => {
-            profileImage.src = e.target.result;
-            profileImage.className += ' rounded-circle'
+          profileImage.src = e.target.result;
+          profileImage.className += ' rounded-circle'
         };
-        const data = {picture}
-        dispatch(updateProfile(data))
-    };
+        setDatas({
+          picture: e.target.files[0]
+        });
+      };
 
     const profileHandler = (e) => {
         e.preventDefault();
         const name = document.getElementById('name').value;
         const email = document.getElementById('email').value;
-        const store_description = document.getElementById('store_description').value;
-        const store_name = document.getElementById('store_name').value;
+        let store_description = null
+        if (document.getElementById('store_description')){
+            store_description = document.getElementById('store_description').value;
+        }
+        let store_name = null
+        if (document.getElementById('store_name')){
+           store_name = document.getElementById('store_name').value;
+        }
+        const picture = datas.picture
         const gender = document.querySelector('#gender option:checked').value;
-        const data = {name, email, store_description, store_name, gender}
-        dispatch(updateProfile(data))
-        // route.push('/login')
+        const data = {name, email, store_description, store_name, picture, gender}
+        dispatch(updateProfile(data))        
+        dispatch(getProfile)
+        window.scrollTo(0, 0)
     }
+
+    const logoutHandler = () => {
+        dispatch(logout)
+        setUserToken(null)
+      }
+    
     return (
         <>  
             <Layout>
@@ -69,11 +103,15 @@ const ProfileSeller = () => {
                         <div className={`${styles.contents} text-center mb-5`}>See your notifications for the latest updates</div>
                     </div>
                 </div>
+                <div className="d-flex justify-content-center align-items-center">                    
+                    <NavbarUser /> 
+                </div>
                 <Form onSubmit={profileHandler}>
                 <div className="mt-5 mx-5 px-5">
                     <div className="d-flex flex-row align-items-center position-relative">
-                        <Image src={auth.userData.picture || people} width={70} height={70} alt="profile" id="profile-image" className=" rounded-circle" />
-                        <Button block variant='pallet-2 radius position-absolute ' onClick={(e) => uploadFile(e)}> Edit <HiOutlinePencil size={20} /> </Button>
+                        <div className="align-items-center d-flex flex-column mt-5">
+                        <Image src={auth.userData?.picture || people} width={70} height={70} alt="profile" id="profile-image" name='product-image' className=" rounded-circle" />
+                        <Button block variant='pallet-2 radius  ' onClick={(e) => uploadFile(e)}> Edit <HiOutlinePencil size={20} /> </Button>
                         <input type="file"
                             ref={hiddenFileInput}
                             className='d-none'
@@ -81,6 +119,7 @@ const ProfileSeller = () => {
                             accept='image'
                             onChange={(e) => fileInputHandler(e)}
                         />
+                        </div>
                         <div className="mx-3">
                             <Input
                                 type="text"
@@ -92,7 +131,6 @@ const ProfileSeller = () => {
                                 placeholder='Input Your Name *'
                             />
                             <div className="px-3">as {role?.name}</div>
-                            <Button type="submit" className={`${carts.button} ms-1 mt-1`}>Edit <HiOutlinePencil /></Button>
                         </div>                        
                     </div>
                 </div>
@@ -109,9 +147,6 @@ const ProfileSeller = () => {
                                             <option value={'female'}>female</option>
                                         </Form.Select>
                                     </div>                                            
-                                    <Button type="submit" className={`${carts.button} `}>
-                                    <div  className=" px-5">Edit <HiOutlinePencil /></div>
-                                    </Button>  
                                 </Card>                               
                             </div>
                         </Col>
@@ -130,18 +165,23 @@ const ProfileSeller = () => {
                                             placeholder='Input Your Email *'
                                         />
                                     </div>
-                                    <Button type="submit" className={`${carts.button} `}>
-                                    <div  className=" px-5">Edit <HiOutlinePencil /></div>
-                                    </Button>     
                                 </Card>                               
                             </div>
                         </Col>
                     </Row>
                 </div>
-                <div className="mt-4 mx-5 px-5 mb-5">
-                    <Button className={`${styles.button} d-flex py-2`}>
-                        <div className="px-2"><MdLogout /></div>
-                        <span className="px-3">Logout</span>
+                <div className="mt-4 mx-5 px-5 mb-5 d-flex">
+                    <Button onClick={()=>setModalShow(true)} type="submit" className={`${styles.button}`}>
+                        <div  className=" px-5">Save</div>
+                    </Button>
+                    <Modals show={modalShow} onHide={() => setModalShow(false)} />
+                    <Button className={`${styles.button} text-black text-decoration-none d-flex py-2 ms-3 px-4`}>
+                        <Link href="/">
+                            <a onClick={logoutHandler} className='d-flex text-decoration-none text-black'>
+                                <div className="px-2"><MdLogout /></div>
+                                <span className="px-3">Logout</span>
+                            </a>
+                        </Link>                        
                     </Button>
                 </div>
                 </Form>
@@ -154,14 +194,15 @@ const ProfileSeller = () => {
                     <div className={`${styles.contents} text-center mb-5`}>See your notifications for the latest updates</div>
                 </div>
             </div>
-            <div className="d-flex justify-content-center align-items-center px-5 mx-5">                    
+            <div className="d-flex justify-content-center align-items-center">                    
                 <NavbarProfile />    
             </div>
             <Form onSubmit={profileHandler}>
             <div className="mt-5 mx-5 px-5">
                 <div className="d-flex flex-row align-items-center position-relative">
-                    <Image src={auth.userData.picture || people} width={70} height={70} alt="profile" id="profile-image" className=" rounded-circle" />
-                    <Button block variant='pallet-2 radius position-absolute ' onClick={(e) => uploadFile(e)}> Edit <HiOutlinePencil size={20} /> </Button>
+                    <div className="align-items-center d-flex flex-column mt-5">
+                    <Image src={auth.userData?.picture || people} width={70} height={70} alt="profile" id="profile-image" className=" rounded-circle" />
+                    <Button block variant='pallet-2 radius  ' onClick={(e) => uploadFile(e)}> Edit <HiOutlinePencil size={20} /> </Button>
                     <input type="file"
                         ref={hiddenFileInput}
                         className='d-none'
@@ -169,6 +210,7 @@ const ProfileSeller = () => {
                         accept='image'
                         onChange={(e) => fileInputHandler(e)}
                     />
+                    </div>
                     <div className="mx-3">
                         <Input
                             type="text"
@@ -180,7 +222,6 @@ const ProfileSeller = () => {
                             placeholder='Input Your Name *'
                         />
                         <div className="px-3">as {role?.name}</div>
-                        <Button type="submit" className={`${carts.button} ms-1 mt-1`}>Edit <HiOutlinePencil /></Button>
                     </div>                        
                 </div>
             </div>
@@ -197,9 +238,6 @@ const ProfileSeller = () => {
                                         <option value={'female'}>female</option>
                                     </Form.Select>
                                 </div>                                            
-                                <Button type="submit" className={`${carts.button} `}>
-                                <div  className=" px-5">Edit <HiOutlinePencil /></div>
-                                </Button>  
                             </Card>                               
                         </div>
                     </Col>
@@ -218,9 +256,6 @@ const ProfileSeller = () => {
                                         placeholder='Input Your Email *'
                                     />
                                 </div>
-                                <Button type="submit" className={`${carts.button} `}>
-                                <div  className=" px-5">Edit <HiOutlinePencil /></div>
-                                </Button>     
                             </Card>                               
                         </div>
                     </Col>
@@ -239,9 +274,6 @@ const ProfileSeller = () => {
                                         placeholder='Your Store Name *'
                                     />
                                 </div>                                            
-                                <Button type="submit" className={`${carts.button} `}>
-                                <div  className=" px-5">Edit <HiOutlinePencil /></div>
-                                </Button>   
                             </Card>                               
                         </div>
                     </Col>
@@ -260,18 +292,23 @@ const ProfileSeller = () => {
                                         placeholder='Your Store Description *'
                                     />
                                 </div>                                            
-                                <Button type="submit" className={`${carts.button} `}>
-                                <div  className=" px-5">Edit <HiOutlinePencil /></div>
-                                </Button>   
                             </Card>                               
                         </div>
                     </Col>
                 </Row>
             </div>
-            <div className="mt-4 mx-5 px-5 mb-5">
-                <Button className={`${styles.button} d-flex py-2`}>
-                    <div className="px-2"><MdLogout /></div>
-                    <span className="px-3">Logout</span>
+            <div className="mt-4 mx-5 px-5 mb-5 d-flex">
+                <Button onClick={()=>setModalShow(true)} type="submit" className={`${styles.button}`}>
+                    <div  className=" px-5">Save</div>
+                </Button>
+                <Modals show={modalShow} onHide={() => setModalShow(false)} />
+                <Button className={`${styles.button} text-black text-decoration-none d-flex py-2 ms-3 px-4`}>
+                    <Link href="/">
+                        <a onClick={logoutHandler} className='d-flex text-decoration-none text-black'>
+                            <div className="px-2"><MdLogout /></div>
+                            <span className="px-3">Logout</span>
+                        </a>
+                    </Link>                        
                 </Button>
             </div>
             </Form>

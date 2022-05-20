@@ -22,9 +22,10 @@ import NumberFormat from "react-number-format";
 import Layout from "../../components/Layout";
 import {BsSearch} from 'react-icons/bs'
 import qs from 'qs'
+import { getCategoryTotal } from "../../redux/actions/category";
 
 const ProductListSearch = () => {
-    const {color, product, size} = useSelector(state=>state)
+    const {color, product, size, category} = useSelector(state=>state)
     const [value, setValue] =  React.useState([0,1000000]);
     const dispatch = useDispatch()
     const router = useRouter()
@@ -45,6 +46,11 @@ const ProductListSearch = () => {
     useEffect(()=>{
         dispatch(getSize)
     },[dispatch])
+
+    useEffect(() => {
+        dispatch(getCategoryTotal);
+    }, [])
+
 
     const rangeSelector = (event, newValue) => {
         setValue(newValue);
@@ -73,7 +79,7 @@ const ProductListSearch = () => {
     }
 
     const productDetail = (id) => {
-        router.push(`product-list/${[id]}`)
+        router.push(`./${[id]}`)
     }
 
     const handleSearch = (e) => {
@@ -119,42 +125,14 @@ const ProductListSearch = () => {
                     <Col xl={3} className='px-5 mt-5 pt-3'>
                         <h3>Categories</h3>
                         <div className="mt-5">
-                        <div className="d-flex flex-row justify-content-between">
-                            <div>Accessories</div>
-                            <div>5</div>
-                        </div>
-                        <div className="d-flex flex-row justify-content-between">
-                            <div>Brands</div>
-                            <div>15</div>
-                        </div>
-                        <div className="d-flex flex-row justify-content-between">
-                            <div>Clothing</div>
-                            <div>3</div>
-                        </div>
-                        <div className="d-flex flex-row justify-content-between">
-                            <div>Fashion</div>
-                            <div>8</div>
-                        </div>
-                        <div className="d-flex flex-row justify-content-between">
-                            <div>Furniture</div>
-                            <div>9</div>
-                        </div>
-                        <div className="d-flex flex-row justify-content-between">
-                            <div>Men</div>
-                            <div>6</div>
-                        </div>
-                        <div className="d-flex flex-row justify-content-between">
-                            <div>Women</div>
-                            <div>8</div>
-                        </div>
-                        <div className="d-flex flex-row justify-content-between">
-                            <div>Shoes</div>
-                            <div>10</div>
-                        </div>
-                        <div className="d-flex flex-row justify-content-between">
-                            <div>Wallets</div>
-                            <div>11</div>
-                        </div>
+                        {category.data.map((data)=>{
+                            return (
+                                <div key={data.id} className="d-flex flex-row justify-content-between">
+                                    <div>{data.name}</div>
+                                    <div>{data.count}</div>
+                                </div>
+                            )
+                        })}
                         </div>
                         <Form>
                         <div style={{

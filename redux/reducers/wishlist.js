@@ -1,31 +1,30 @@
 const initialState = {
   data: [],
-  subtotal: 0,
 }
 
-const cart = (state = initialState, action) => {
+const wishlist = (state = initialState, action) => {
   switch (action.type) {
-    case 'ADD_CART': {
+    case 'ADD_WISHLIST': {
       const data = action.payload
       state.data = data
       return { ...state }
     }
-    case 'GET_CART': {
+    case 'REMOVE_WISHLIST': {
       const data = action.payload
       state.data = data
-      if(!Array.isArray(data)){
+      return { ...state }
+    }
+    case 'CHECK_WISHLIST': {
+      const data = action.payload
+      state.data = data
+      return { ...state }
+    }
+    case 'GET_WISHLIST': {
+      const data = action.payload
+      state.data = data
+      if (!Array.isArray(data)) {
         state.data = [data]
       }
-      return { ...state }
-    }
-    case 'CHECKOUT_CART': {
-      const data = action.payload
-      state.data = data
-      return { ...state }
-    }
-    case 'REMOVE_CART': {
-      const data = action.payload
-      state.data = data
       return { ...state }
     }
     default: {
@@ -34,4 +33,4 @@ const cart = (state = initialState, action) => {
   }
 }
 
-export default cart
+export default wishlist

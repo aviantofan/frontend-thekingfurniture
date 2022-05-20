@@ -7,6 +7,9 @@ const size = (state = dataSize, action) => {
         case 'GET_SIZE': {
             const data = action.payload
             state.data = data
+            if(!Array.isArray(data)){
+                state.data = [data]
+            }
             return {...state }
         }
         default: {
